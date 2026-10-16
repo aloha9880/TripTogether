@@ -9,6 +9,8 @@ namespace TripTogether.App
         private readonly TaskCompletionSource<DateTime?> completion =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
+        private bool closing;
+
         public Task<DateTime?> Result => completion.Task;
 
         public DateTimePickerPage(
@@ -56,6 +58,7 @@ namespace TripTogether.App
                         : timePicker.Time!.Value),
                     DateTimeKind.Unspecified);
 
+                closing = true;
                 save.IsEnabled = cancel.IsEnabled = false;
 
                 await Navigation.PopModalAsync();
@@ -64,6 +67,7 @@ namespace TripTogether.App
 
             cancel.Clicked += async (_, _) =>
             {
+                closing = true;
                 save.IsEnabled = cancel.IsEnabled = false;
 
                 await Navigation.PopModalAsync();
@@ -106,7 +110,7 @@ namespace TripTogether.App
             // Handles dismissal using the device's Back button or gesture.
             Dispatcher.Dispatch(() =>
             {
-                if (!Navigation.ModalStack.Contains(this))
+                if (!closing && !Navigation.ModalStack.Contains(this))
                     completion.TrySetResult(null);
             });
         }

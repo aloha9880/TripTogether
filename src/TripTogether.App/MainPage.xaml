@@ -2,16 +2,30 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="TripTogether.App.MainPage" Title="TripTogether" BackgroundColor="#F5F7F5">
 <ScrollView><VerticalStackLayout Padding="24" Spacing="14">
 <Label Text="Plan something together." FontSize="28" FontAttributes="Bold" TextColor="#123D45"/>
-<Label Text="Your trips stay on this phone. Share a selected trip when both phones are on the same Wi-Fi."/>
-<Label Text="Trip"/><Picker x:Name="TripPicker" Title="Choose a trip" SelectedIndexChanged="TripChanged" ItemDisplayBinding="{Binding Name}"/>
-<Button Text="Create trip" Clicked="CreateTrip"/><Button Text="Add event" Clicked="AddEvent"/>
-<VerticalStackLayout x:Name="Events" Spacing="10"/>
+<Label Text="Plan offline. Invite someone on the same Wi-Fi or hotspot, then approve their join."/>
+<VerticalStackLayout x:Name="IncomingPanel" IsVisible="False" Padding="16" Spacing="10" BackgroundColor="#FFF1D6">
+  <Label Text="Trip invitation received" FontAttributes="Bold" FontSize="20"/>
+  <Label x:Name="IncomingDetails"/>
+  <Button x:Name="AcceptInvitationButton" Text="Review and join" Clicked="AcceptInvitation"/>
+  <Button Text="Decline invitation" Clicked="DeclineInvitation"/>
+</VerticalStackLayout>
+<VerticalStackLayout x:Name="TripControls" Spacing="12">
+  <Label Text="Trip"/><Picker x:Name="TripPicker" Title="Choose a trip" SelectedIndexChanged="TripChanged" ItemDisplayBinding="{Binding Name}"/>
+  <Button Text="Create trip" Clicked="CreateTrip"/><Button Text="Add event" Clicked="AddEvent"/>
+  <VerticalStackLayout x:Name="Events" Spacing="10"/>
+</VerticalStackLayout>
 <Label Text="Nearby sharing" FontSize="22" FontAttributes="Bold"/>
-<Entry x:Name="HostAddress" Placeholder="This phone’s Wi-Fi IP (e.g. 192.168.1.12)" Keyboard="Text" SemanticProperties.Description="Your phone's local Wi-Fi IP address"/>
-<Button Text="Host one sharing session" Clicked="Host"/>
-<Editor x:Name="InvitationText" Placeholder="Invitation appears here. Send it privately to the other person, or paste their invitation here." HeightRequest="110" AutoSize="TextChanges" SemanticProperties.Description="Private sharing invitation"/>
-<Button Text="Copy invitation" Clicked="CopyInvitation"/><Button Text="Preview and join invitation" Clicked="Join"/>
-<Button Text="Cancel sharing" Clicked="Cancel"/>
+<Entry x:Name="DeviceName" Placeholder="Your device name" MaxLength="80" SemanticProperties.Description="Name shown to the host when you request to join"/>
+<Entry x:Name="HostAddress" Placeholder="Wi-Fi IP address (detected automatically)" Keyboard="Text" SemanticProperties.Description="Your phone's Wi-Fi IPv4 address"/>
+<Button x:Name="DetectAddressButton" Text="Detect Wi-Fi address" Clicked="DetectAddress"/>
+<Button x:Name="HostButton" Text="Start hosting selected trip" Clicked="Host"/>
+<Button x:Name="ShareInvitationButton" Text="Send invitation…" Clicked="ShareInvitation" IsEnabled="False"/>
+<Label x:Name="HostingDetails" IsVisible="False"/>
+<Editor x:Name="InvitationText" Placeholder="Paste a triptogether:// invitation link or encoded invitation." HeightRequest="100" AutoSize="TextChanges" SemanticProperties.Description="Private sharing invitation"/>
+<Button x:Name="CopyInvitationButton" Text="Copy invitation link" Clicked="CopyInvitation"/>
+<Button x:Name="JoinButton" Text="Review pasted invitation" Clicked="Join"/>
+<Button x:Name="CancelButton" Text="Stop hosting / cancel join" Clicked="Cancel" IsEnabled="False"/>
 <Label x:Name="Status" Text="Ready" SemanticProperties.Description="Sharing status"/>
-<Label Text="Version 0.1: foreground, manual nearby sessions. Phone calendar integration and remote sharing are planned." FontSize="12"/>
+<Label x:Name="LastJoin"/>
+<Label Text="Keep both apps open while joining. Invitations expire after 10 minutes. Messages/email can notify the recipient; this app does not send background push notifications." FontSize="12"/>
 </VerticalStackLayout></ScrollView></ContentPage>

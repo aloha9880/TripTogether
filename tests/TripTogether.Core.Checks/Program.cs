@@ -25,14 +25,70 @@ Reject(()=>a.Merge(new Snapshot(1,trip with {Id=Guid.NewGuid()},[])),"reject ano
 var allDay=data with {AllDay=true,FirstDate=new(2026,12,27),EndDateExclusive=new(2026,12,28),Start=DateTimeOffset.UnixEpoch,End=DateTimeOffset.UnixEpoch};allDay.Validate();
 Check(JsonSerializer.Deserialize<EventData>(JsonSerializer.Serialize(allDay))==allDay,"all-day dates survive serialization");Reject(()=>(allDay with {EndDateExclusive=allDay.FirstDate}).Validate(),"reject empty all-day interval");
 Check(JsonSerializer.Deserialize<EventData>(JsonSerializer.Serialize(data))==data,"timed offset survives serialization");
+
+var invite = new Invitation(Invitation.CurrentVersion,"192.168.1.10",5000,new string('A',64),new string('B',64),DateTimeOffset.UtcNow.AddMinutes(5),trip);
+Check(Invitation.Decode(invite.Encode()) == invite,"raw invitation round trip");
+Check(Invitation.Decode(invite.ToLink()) == invite,"URL-safe invitation link round trip");
+Reject(()=>Invitation.Decode("triptogether://other/"+invite.Encode()),"reject incorrect link destination");
+Reject(()=>Invitation.Decode(invite.ToLink()+"?token=oops"),"reject unexpected query");
+Reject(()=>Invitation.Decode((invite with {Expires=DateTimeOffset.UtcNow.AddSeconds(-1)}).Encode()),"reject expired invitation");
+Reject(()=>Invitation.Decode((invite with {Version=1}).Encode()),"reject old handshake version");
+Reject(()=>Invitation.Decode((invite with {Token="no"}).Encode()),"reject malformed token");
+Reject(()=>Invitation.Decode((invite with {Host="0.0.0.0"}).Encode()),"reject wildcard host");
+Reject(()=>Invitation.Decode((invite with {Host="224.0.0.1"}).Encode()),"reject multicast host");
+Reject(()=>Invitation.Decode((invite with {Trip=null!}).Encode()),"reject null trip");
+Reject(()=>Invitation.Decode("not an invitation"),"reject invalid base64");
+Reject(()=>a.Merge(new Snapshot(1,trip,null!)),"reject null change collection");
+Reject(()=>a.Merge(new Snapshot(1,trip,[null!])),"reject null change");
+Reject(()=>a.Merge(new Snapshot(1,trip,[root with {Parents=null!}])),"reject null parent list");
 if(args.Contains("--network"))
 {
- var ip=Dns.GetHostAddresses(Dns.GetHostName()).First(p=>p.AddressFamily==AddressFamily.InterNetwork&&!IPAddress.IsLoopback(p)).ToString();
- using var host=new NearbySession(trip,ip);using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(10));
- var incoming=host.ReceiveAsync(a.Export(),timeout.Token);var received=await NearbySession.JoinAsync(Invitation.Decode(host.Invitation.Encode()),b.Export(),timeout.Token);var merged=await incoming;
- Check(received.Changes.Length==merged.Changes.Length,"real TLS socket session merges both logs");
- using var host2=new NearbySession(trip,ip);var waiting=host2.ReceiveAsync(a.Export(),timeout.Token);
- try {await NearbySession.JoinAsync(host2.Invitation with {Token=new string('0',64)},b.Export(),timeout.Token);throw new Exception("Bad token accepted");}catch(Exception ex) when(ex is IOException or AuthenticationException) {}
- try {await waiting;throw new Exception("Bad token accepted by host");}catch(AuthenticationException){Check(true,"reject incorrect invitation token");}
+ var ip=Environment.GetEnvironmentVariable("TRIP_TEST_IP") ?? LocalAddresses.GetAvailable().First().Address;
+ using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(40));
+ using var host=new NearbySession(trip,ip);
+ var hostLog=new CalendarLog(trip);hostLog.Merge(a.Export());
+ bool allow=true;int approvals=0,completed=0;var updates=new List<HostUpdate>();
+ var running=host.HostAsync((request,ct)=>{approvals++;return Task.FromResult(allow);},
+  (remote,ct)=>{hostLog.Merge(remote);return Task.FromResult(hostLog.Export());},
+  update=>{updates.Add(update);if(update.Stage==HostStage.Joined)completed++;},timeout.Token);
+ async Task MustFail(Func<Task> action,string name)
+ {
+  try{await action();}catch(Exception ex) when(ex is IOException or AuthenticationException or InvalidDataException){Check(true,name);return;}
+  throw new Exception("Expected failure: "+name);
+ }
+ var guestLog=new CalendarLog(trip);guestLog.Merge(b.Export());
+ Snapshot? saved=null;
+ Task Join(Invitation invitation)=>NearbySession.JoinAsync(invitation,guestLog.Export(),Guid.NewGuid(),"Test phone",
+  (snapshot,ct)=>{saved=snapshot;return Task.CompletedTask;},null,timeout.Token);
+ await MustFail(()=>Join(host.Invitation with {Token=new string('0',64)}),"incorrect token rejected");
+ Check(approvals==0,"unauthenticated guest never prompts host");
+ await MustFail(()=>Join(host.Invitation with {Fingerprint=new string('0',64)}),"incorrect certificate pin rejected");
+ Check(approvals==0,"wrong certificate never prompts host");
+ allow=false;await MustFail(()=>Join(host.Invitation),"declined guest receives rejection");
+ Check(saved is null,"decline does not persist guest trip");
+ allow=true;await Join(host.Invitation);
+ Check(saved is not null && saved.Changes.Length==hostLog.Export().Changes.Length,"approved join persists merged trip");
+ await Join(host.Invitation);
+ Check(approvals==3,"host accepts another join without restarting");
+ await MustFail(()=>NearbySession.JoinAsync(host.Invitation,guestLog.Export(),Guid.NewGuid(),"Disk failure phone",
+  (_,_)=>throw new IOException("Simulated storage failure"),null,timeout.Token),"guest persistence failure is surfaced");
+ await Join(host.Invitation);
+ // Let the host read the final receipt before cancellation.
+ var receiptDeadline=DateTime.UtcNow.AddSeconds(3);
+ while(completed<3 && DateTime.UtcNow<receiptDeadline)await Task.Delay(10);
+ Check(completed==3,"only guests that save and acknowledge count as joined");
+ Check(updates.Any(x=>x.Stage==HostStage.Failed),"failed peer is reported without terminating host");
+ timeout.Cancel();try{await running;}catch(OperationCanceledException){}
+ Check(running.IsCompleted,"cancellation terminates waiting host");
+ // Stop invalidates the old listening endpoint.
+ await MustFail(async()=>
+ {
+  try
+  {
+   using var stoppedTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+   await NearbySession.JoinAsync(host.Invitation,guestLog.Export(),Guid.NewGuid(),"Stopped test",(_,_)=>Task.CompletedTask,null,stoppedTimeout.Token);
+  }
+  catch(System.Net.Sockets.SocketException ex){throw new IOException("Stopped host",ex);}
+ },"stopped host no longer accepts joins");
 }
 Console.WriteLine($"{count} checks passed.");

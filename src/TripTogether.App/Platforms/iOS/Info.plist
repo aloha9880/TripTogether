@@ -27,7 +27,14 @@
 		<key>NSLocalNetworkUsageDescription</key>
 		<string>Connect to another phone on your Wi-Fi to share a trip you select.</string>
 
-		<key>UIApplicationSceneManifest</key>
+		<key>CFBundleURLTypes</key>
+        <array><dict>
+            <key>CFBundleURLName</key><string>com.aloha9880.triptogether.invitation</string>
+            <key>CFBundleURLSchemes</key><array><string>triptogether</string></array>
+            <key>CFBundleTypeRole</key><string>Editor</string>
+        </dict></array>
+
+        <key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>
 			<false/>

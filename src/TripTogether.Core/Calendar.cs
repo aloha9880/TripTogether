@@ -5,7 +5,7 @@ public sealed record EventData(string Title, string Notes, string Location, Date
 {
     public void Validate()
     {
-        if (string.IsNullOrWhiteSpace(Title) || Title.Length > 200 || Notes.Length > 10000 || Location.Length > 1000)
+        if (string.IsNullOrWhiteSpace(Title) || Title.Length > 200 || Notes is null || Location is null || Notes.Length > 10000 || Location.Length > 1000)
             throw new InvalidDataException("Check event title and text lengths.");
         _ = TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId);
         if (AllDay ? FirstDate is null || EndDateExclusive is null || EndDateExclusive <= FirstDate : End <= Start)
@@ -21,7 +21,7 @@ public sealed class CalendarLog
     public CalendarLog(Trip trip) { Trip = trip; ValidateTrip(trip); }
     public static void ValidateTrip(Trip trip)
     {
-        if (trip.Id == Guid.Empty || string.IsNullOrWhiteSpace(trip.Name) || trip.Name.Length > 200)
+        if (trip is null || trip.Id == Guid.Empty || string.IsNullOrWhiteSpace(trip.Name) || trip.Name.Length > 200)
             throw new InvalidDataException("Invalid trip.");
         _ = TimeZoneInfo.FindSystemTimeZoneById(trip.TimeZoneId);
     }
@@ -35,12 +35,12 @@ public sealed class CalendarLog
     public Snapshot Export() => new(1, Trip, changes.Values.OrderBy(x => x.Id).ToArray());
     public void Merge(Snapshot incoming)
     {
-        if (incoming.Version != 1 || incoming.Trip != Trip || incoming.Changes.Length > 10000)
+        if (incoming is null || incoming.Version != 1 || incoming.Trip != Trip || incoming.Changes is null || incoming.Changes.Length > 10000)
             throw new InvalidDataException("Unsupported or mismatched trip snapshot.");
         var next = new Dictionary<Guid, Change>(changes);
         foreach (var c in incoming.Changes)
         {
-            if (c.Id == Guid.Empty || c.EventId == Guid.Empty || c.DeviceId == Guid.Empty || c.TripId != Trip.Id || c.Parents.Length > 10000)
+            if (c is null || c.Parents is null || c.Id == Guid.Empty || c.EventId == Guid.Empty || c.DeviceId == Guid.Empty || c.TripId != Trip.Id || c.Parents.Length > 10000)
                 throw new InvalidDataException("Invalid change.");
             c.Data?.Validate();
             if (c.Parents.Distinct().Count() != c.Parents.Length) throw new InvalidDataException("Duplicate parent.");
