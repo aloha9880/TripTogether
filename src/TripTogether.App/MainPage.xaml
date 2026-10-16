@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="TripTogether.App.MainPage" Title="TripTogether" BackgroundColor="#F5F7F5">
+<ScrollView><VerticalStackLayout Padding="24" Spacing="14">
+<Label Text="Plan something together." FontSize="28" FontAttributes="Bold" TextColor="#123D45"/>
+<Label Text="Your trips stay on this phone. Share a selected trip when both phones are on the same Wi-Fi."/>
+<Label Text="Trip"/><Picker x:Name="TripPicker" Title="Choose a trip" SelectedIndexChanged="TripChanged" ItemDisplayBinding="{Binding Name}"/>
+<Button Text="Create trip" Clicked="CreateTrip"/><Button Text="Add event" Clicked="AddEvent"/>
+<VerticalStackLayout x:Name="Events" Spacing="10"/>
+<Label Text="Nearby sharing" FontSize="22" FontAttributes="Bold"/>
+<Entry x:Name="HostAddress" Placeholder="This phone’s Wi-Fi IP (e.g. 192.168.1.12)" Keyboard="Text" SemanticProperties.Description="Your phone's local Wi-Fi IP address"/>
+<Button Text="Host one sharing session" Clicked="Host"/>
+<Editor x:Name="InvitationText" Placeholder="Invitation appears here. Send it privately to the other person, or paste their invitation here." HeightRequest="110" AutoSize="TextChanges" SemanticProperties.Description="Private sharing invitation"/>
+<Button Text="Copy invitation" Clicked="CopyInvitation"/><Button Text="Preview and join invitation" Clicked="Join"/>
+<Button Text="Cancel sharing" Clicked="Cancel"/>
+<Label x:Name="Status" Text="Ready" SemanticProperties.Description="Sharing status"/>
+<Label Text="Version 0.1: foreground, manual nearby sessions. Phone calendar integration and remote sharing are planned." FontSize="12"/>
+</VerticalStackLayout></ScrollView></ContentPage>

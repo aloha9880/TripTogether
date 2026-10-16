@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripTogether.Core", "src\TripTogether.Core\TripTogether.Core.csproj", "{3D02F236-1283-43AE-8404-3FBD40653461}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripTogether.App", "src\TripTogether.App\TripTogether.App.csproj", "{C72CD7E2-48CC-43D4-82A3-A3F0E3F8B759}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripTogether.Core.Checks", "tests\TripTogether.Core.Checks\TripTogether.Core.Checks.csproj", "{319C1449-E164-42AC-9F3C-35A96E9583D6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3D02F236-1283-43AE-8404-3FBD40653461}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D02F236-1283-43AE-8404-3FBD40653461}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D02F236-1283-43AE-8404-3FBD40653461}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D02F236-1283-43AE-8404-3FBD40653461}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C72CD7E2-48CC-43D4-82A3-A3F0E3F8B759}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C72CD7E2-48CC-43D4-82A3-A3F0E3F8B759}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C72CD7E2-48CC-43D4-82A3-A3F0E3F8B759}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C72CD7E2-48CC-43D4-82A3-A3F0E3F8B759}.Release|Any CPU.Build.0 = Release|Any CPU
+		{319C1449-E164-42AC-9F3C-35A96E9583D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{319C1449-E164-42AC-9F3C-35A96E9583D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{319C1449-E164-42AC-9F3C-35A96E9583D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{319C1449-E164-42AC-9F3C-35A96E9583D6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
